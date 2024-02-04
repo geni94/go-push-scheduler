@@ -1,0 +1,26 @@
+# Binaries and objects
+/bin/
+/obj/
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.out
+
+# Dependency directories (remove if using vendoring)
+/vendor/
+
+# IDE/editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Local configuration files
+*.env.local
+*.yaml.local
