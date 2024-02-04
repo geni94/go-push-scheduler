@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"strings"
 	"syscall"
 	"time"
@@ -17,43 +16,17 @@ import (
 )
 
 var (
-	tokenFlag    = flag.String("token", "", "GitHub Personal Access Token")
-	usernameFlag = flag.String("username", "", "GitHub username")
+	tokenFlag    = flag.String("token", "", "Your GitHub Personal Access Token. Provide either this, or the username and password.")
+	usernameFlag = flag.String("username", "", "Your GitHub username. Provide either this, or the token.")
 	dateFlag     = flag.String("date", "", "When to push the commit, in the format: dd-mm-yyyy hh:mm")
-	pathFlag     = flag.String("path", "", "Path to the repository to commit")
+	pathFlag     = flag.String("path", "", "Absolute path to the repository to push.")
 )
 
-func hasUpstreamBranch(repoPath string) (bool, error) {
-	cmd := exec.Command("git", "-C", repoPath, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
-	err := cmd.Run()
-	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return false, nil // No upstream branch
-		}
-		return false, err // Some other error occurred
-	}
-	return true, nil // Upstream branch exists
-}
-
-func gitCommit(message string) {
-	cmd := exec.Command("git", "commit", "-m", message)
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func gitPush(repoPath string, setUpstream bool) {
-	args := []string{"-C", repoPath, "push"}
-	if setUpstream {
-		args = append(args, "-u")
-	}
-	args = append(args, "origin", "HEAD")
-
-	cmd := exec.Command("git", args...)
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
+func init() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Git Push Scheduler: Commit now, push whenever you want.\n\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage:\n")
+		flag.PrintDefaults()
 	}
 }
 
@@ -84,6 +57,12 @@ func promptForPassword() string {
 
 func main() {
 	flag.Parse()
+
+	if flag.NFlag() == 0 {
+		// return Usage func if no arguments are passed
+		flag.Usage()
+		return
+	}
 
 	if *tokenFlag == "" && *usernameFlag == "" {
 		fmt.Println("A GitHub Username or a Personal Access Token is required")
